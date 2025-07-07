@@ -1,5 +1,6 @@
 package com.dcode.Security.util;
 
+import io.jsonwebtoken.JwtException;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
 import io.jsonwebtoken.security.Keys;
@@ -21,6 +22,19 @@ public class JWTUtil {
                 .setExpiration(new Date(System.currentTimeMillis() + expiryMinutes * 60 * 1000)) //in milliseconds
                 .signWith(key, SignatureAlgorithm.HS256)
                 .compact();
+    }
+
+    public String validateAndExtractUsername(String token) {
+        try {
+            return Jwts.parser()
+                    .setSigningKey(key)
+                    .build()
+                    .parseClaimsJws(token)
+                    .getBody()
+                    .getSubject();
+        } catch (JwtException e) {
+            return null; // Invalid or expired JWT
+        }
     }
 
 

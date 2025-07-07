@@ -1,6 +1,8 @@
 package com.dcode.Security;
 
 import com.dcode.Security.filter.JWTAuthenticationFilter;
+import com.dcode.Security.filter.JWTValidationFilter;
+import com.dcode.Security.provider.JWTAuthenticationProvider;
 import com.dcode.Security.util.JWTUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
@@ -41,6 +43,11 @@ public class SecurityConfig {
     }
 
     @Bean
+    public JWTAuthenticationProvider jwtAuthenticationProvider() {
+        return new JWTAuthenticationProvider(jwtUtil, userDetailsService);
+    }
+
+    @Bean
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
     }
@@ -56,13 +63,16 @@ public class SecurityConfig {
                 authenticationManager, jwtUtil
         );
 
+        JWTValidationFilter jwtValidationFilter = new JWTValidationFilter(authenticationManager);
+
         http
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/auth/register", "/h2-console/**").permitAll() // Allow register + H2 console
                         .anyRequest().authenticated()
                 )
                 .csrf(csrf -> csrf.disable())
-                .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
+                .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class) // Generate token filter
+                .addFilterAfter(jwtValidationFilter, JWTAuthenticationFilter.class) // Validate token filter
                 .headers(headers -> headers.frameOptions(frameOptions -> frameOptions.disable())); // Disable frame options for H2 console
 
         return http.build();
@@ -70,7 +80,10 @@ public class SecurityConfig {
 
     @Bean
     public AuthenticationManager authenticationManager() {
-        return new ProviderManager(Arrays.asList(daoAuthenticationProvider()));
+        return new ProviderManager(Arrays.asList(
+                daoAuthenticationProvider(),
+                jwtAuthenticationProvider()
+        ));
     }
 
 }

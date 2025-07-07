@@ -4,10 +4,7 @@ import com.dcode.Security.entity.UserAuthEntity;
 import com.dcode.Security.service.UserAuthEntityService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/auth")
@@ -25,5 +22,10 @@ public class UserAuthController {
         userAuthEntity.setPassword(passwordEncoder.encode(userAuthEntity.getPassword()));
         userAuthEntityService.save(userAuthEntity);
         return ResponseEntity.ok("User registered successfully");
+    }
+
+    @GetMapping("/users")
+    public String getUserDetails() {
+        return "Success";
     }
 }
