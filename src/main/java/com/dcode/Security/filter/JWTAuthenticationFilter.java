@@ -5,6 +5,7 @@ import com.dcode.Security.util.JWTUtil;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
+import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -42,6 +43,17 @@ public class JWTAuthenticationFilter extends OncePerRequestFilter {
         if (authResult.isAuthenticated()) {
             String token = jwtUtil.generateToken(authResult.getName(), 15);
             response.setHeader("Authorization", "Bearer " + token);
+
+            // Set Refresh Token in HttpOnly Cookie
+            // we can also send it in response body but then client has to store it in local storage or in-memory
+            String refreshToken = jwtUtil.generateToken(authResult.getName(), 7 * 24 * 60); // 7day
+            Cookie refreshCookie = new Cookie("refreshToken", refreshToken);
+            refreshCookie.setHttpOnly(true); //prevent javascript from accessing it
+            refreshCookie.setSecure(true); // sent only over HTTPS
+            refreshCookie.setPath("/refresh-token"); // Cookie available only for refresh endpoint
+            refreshCookie.setMaxAge(7 * 24 * 60 * 60); // 7 days expiry
+            response.addCookie(refreshCookie);
+
         }
 
     }

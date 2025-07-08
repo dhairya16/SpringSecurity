@@ -1,6 +1,7 @@
 package com.dcode.Security;
 
 import com.dcode.Security.filter.JWTAuthenticationFilter;
+import com.dcode.Security.filter.JWTRefreshFilter;
 import com.dcode.Security.filter.JWTValidationFilter;
 import com.dcode.Security.provider.JWTAuthenticationProvider;
 import com.dcode.Security.util.JWTUtil;
@@ -10,7 +11,6 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.ProviderManager;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
-import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.core.userdetails.UserDetailsService;
@@ -65,6 +65,8 @@ public class SecurityConfig {
 
         JWTValidationFilter jwtValidationFilter = new JWTValidationFilter(authenticationManager);
 
+        JWTRefreshFilter jwtRefreshFilter = new JWTRefreshFilter(jwtUtil, authenticationManager);
+
         http
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/auth/register", "/h2-console/**").permitAll() // Allow register + H2 console
@@ -73,6 +75,7 @@ public class SecurityConfig {
                 .csrf(csrf -> csrf.disable())
                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class) // Generate token filter
                 .addFilterAfter(jwtValidationFilter, JWTAuthenticationFilter.class) // Validate token filter
+                .addFilterAfter(jwtRefreshFilter, JWTValidationFilter.class) // Refresh token filter
                 .headers(headers -> headers.frameOptions(frameOptions -> frameOptions.disable())); // Disable frame options for H2 console
 
         return http.build();
