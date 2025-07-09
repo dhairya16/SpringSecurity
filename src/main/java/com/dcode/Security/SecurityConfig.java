@@ -23,13 +23,9 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
-                .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/auth/register", "/h2-console/**").permitAll() // Allow register + H2 console
-                        .anyRequest().authenticated()
-                )
+                .authorizeHttpRequests(auth -> auth.anyRequest().authenticated())
                 .csrf(csrf -> csrf.disable())
-                .headers(headers -> headers.frameOptions(frameOptions -> frameOptions.disable())) // Disable frame options for H2 console
-                .httpBasic(Customizer.withDefaults());
+                .oauth2Login(Customizer.withDefaults());
 
         return http.build();
     }
